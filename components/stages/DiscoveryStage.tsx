@@ -34,12 +34,16 @@ interface DiscoveryStageProps {
   projectId: string;
   defaultBrief?: string;
   onStageComplete?: () => void;
+  isGuest?: boolean;
+  onGuestBriefUpdate?: (content: string) => void;
 }
 
 export function DiscoveryStage({
   projectId,
   defaultBrief = "",
   onStageComplete,
+  isGuest = false,
+  onGuestBriefUpdate,
 }: DiscoveryStageProps) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -67,13 +71,19 @@ export function DiscoveryStage({
     setSaved(false);
 
     try {
-      await saveStageAction({
-        projectId,
-        stage: "discovery",
-        finalOutput: {
-          brief: { content: data.brief },
-        },
-      });
+      if (isGuest) {
+        // Guest mode: update local state only
+        onGuestBriefUpdate?.(data.brief);
+      } else {
+        // Authenticated: persist to database
+        await saveStageAction({
+          projectId,
+          stage: "discovery",
+          finalOutput: {
+            brief: { content: data.brief },
+          },
+        });
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e: any) {

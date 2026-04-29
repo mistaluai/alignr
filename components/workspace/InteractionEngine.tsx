@@ -12,12 +12,16 @@ interface InteractionEngineProps {
   project: Project;
   currentStage: ProjectStage;
   onStageComplete?: () => void;
+  isGuest?: boolean;
+  onGuestBriefUpdate?: (content: string) => void;
 }
 
 export function InteractionEngine({
   project,
   currentStage,
   onStageComplete,
+  isGuest = false,
+  onGuestBriefUpdate,
 }: InteractionEngineProps) {
   const renderStage = () => {
     switch (currentStage) {
@@ -27,6 +31,8 @@ export function InteractionEngine({
             projectId={project._id}
             defaultBrief={project.businessBrief?.content || ""}
             onStageComplete={onStageComplete}
+            isGuest={isGuest}
+            onGuestBriefUpdate={onGuestBriefUpdate}
           />
         );
       case "architectural_design":

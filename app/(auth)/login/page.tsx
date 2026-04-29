@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
-import { LogIn } from "lucide-react";
+import { LogIn, Sparkles } from "lucide-react";
 
 import { loginAction, type AuthState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,18 @@ export default function LoginPage() {
               Sign up
             </Link>
           </p>
+          <div className="flex w-full items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="text-xs text-fg-muted/50">or</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <Link
+            href="/try"
+            className="flex items-center gap-2 text-sm text-fg-muted hover:text-accent transition-colors"
+          >
+            <Sparkles className="h-4 w-4" />
+            Try without an account
+          </Link>
         </CardFooter>
       </form>
     </Card>
