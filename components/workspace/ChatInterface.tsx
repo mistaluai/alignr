@@ -99,6 +99,23 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     .replace(/_/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
+  // Determine whether to hide the chat input.
+  // In the discovery stage, once the BA starts asking questions via tools, 
+  // we hide the default text input to force the user to use the forms.
+  const hasStartedInterview =
+    currentStage === "discovery" &&
+    messages.some(
+      (m) =>
+        m.role === "assistant" &&
+        m.parts?.some(
+          (p) =>
+            p.type === "tool-askInterviewQuestions" ||
+            p.type === "tool-presentBrief"
+        )
+    );
+  
+  const showChatInput = !hasStartedInterview;
+
   return (
     <div className="flex flex-col h-full bg-bg">
       {/* Header */}
@@ -431,33 +448,35 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
       )}
 
       {/* Input */}
-      <div className="p-4 bg-bg border-t border-border">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (input.trim()) {
-              sendMessage({ text: input });
-              setInput("");
-            }
-          }}
-          className="flex gap-2"
-        >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={`Message ${stageName} agent…`}
-            disabled={status !== "ready" && status !== "error"}
-            className="flex-1 rounded-md border border-border bg-bg-secondary px-3 py-2 text-sm text-fg placeholder:text-fg-muted/50 focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!input.trim() || (status !== "ready" && status !== "error")}
+      {showChatInput && (
+        <div className="p-4 bg-bg border-t border-border">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (input.trim()) {
+                sendMessage({ text: input });
+                setInput("");
+              }
+            }}
+            className="flex gap-2"
           >
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-      </div>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={`Message ${stageName} agent…`}
+              disabled={status !== "ready" && status !== "error"}
+              className="flex-1 rounded-md border border-border bg-bg-secondary px-3 py-2 text-sm text-fg placeholder:text-fg-muted/50 focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!input.trim() || (status !== "ready" && status !== "error")}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
