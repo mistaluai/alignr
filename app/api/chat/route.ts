@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { UIMessage } from 'ai';
 import { businessAnalyst } from '@/lib/agents/businessAnalyst';
 import { softwarePlanner } from '@/lib/agents/softwarePlanner';
@@ -8,7 +8,10 @@ import { critiqueParser } from '@/lib/agents/critiqueParser';
 // Placeholder for your database retrieval logic
 // import { getProjectById } from '@/lib/db/projectService';
 
-export async function POST(req: NextRequest) {
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
+
+export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { messages, projectId }: { messages: UIMessage[]; projectId: string } = body;

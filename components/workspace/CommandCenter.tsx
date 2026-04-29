@@ -8,7 +8,7 @@ import type { Project } from "@/lib/schemas/project";
 import type { ProjectStage } from "@/lib/schemas/chat";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PipelineStepper } from "@/components/workspace/PipelineStepper";
+
 import { InteractionEngine } from "@/components/workspace/InteractionEngine";
 import { GlobalArtifacts } from "@/components/workspace/GlobalArtifacts";
 
@@ -107,12 +107,8 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
         <Badge stage={currentStage} />
       </div>
 
-      {/* Tri-pane layout */}
+      {/* Dual-pane layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left Pane — Pipeline Stepper */}
-        <aside className="w-52 shrink-0 border-r border-border bg-bg-secondary/30 overflow-y-auto">
-          <PipelineStepper currentStage={currentStage} />
-        </aside>
 
         {/* Center Pane — Interaction Engine */}
         <main className="flex-1 flex flex-col overflow-hidden border-r border-border">
