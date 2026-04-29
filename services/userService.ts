@@ -42,12 +42,12 @@ export async function loginUser(email: string, passwordPlain: string): Promise<U
 
   const userDoc = await db.collection("users").findOne({ email });
   if (!userDoc) {
-    throw new Error("User not found");
+    throw new Error("Invalid email or password");
   }
 
   const isPasswordValid = await bcrypt.compare(passwordPlain, userDoc.passwordHash);
   if (!isPasswordValid) {
-    throw new Error("Invalid password");
+    throw new Error("Invalid email or password");
   }
 
   const user = {
@@ -62,11 +62,16 @@ export async function getUserProjects(userId: string): Promise<Project[]> {
   const client = await clientPromise;
   const db = client.db(DB_NAME);
 
-  const projects = await db.collection("projects").find({ userId }).toArray();
+  if (!ObjectId.isValid(userId)) {
+    throw new Error("Invalid User ID");
+  }
+
+  const projects = await db.collection("projects").find({ userId: new ObjectId(userId) }).toArray();
 
   return projects.map((p) => {
     const formattedProject = {
       ...p,
+      userId: p.userId.toString(),
       _id: p._id.toString(),
     };
     return projectSchema.parse(formattedProject);
@@ -77,8 +82,12 @@ export async function createProject(userId: string, title: string): Promise<Proj
   const client = await clientPromise;
   const db = client.db(DB_NAME);
 
+  if (!ObjectId.isValid(userId)) {
+    throw new Error("Invalid User ID");
+  }
+
   const newProject = {
-    userId,
+    userId: new ObjectId(userId),
     title,
     currentStage: "discovery",
     createdAt: new Date(),
@@ -92,6 +101,7 @@ export async function createProject(userId: string, title: string): Promise<Proj
 
   const formattedProject = {
     ...projectDoc,
+    userId: projectDoc.userId.toString(),
     _id: projectDoc._id.toString(),
   };
 

@@ -1,5 +1,5 @@
 import { MongoMemoryServer } from "mongodb-memory-server";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import { MongoClient, ServerApiVersion, ObjectId } from "mongodb";
 
 // Global variable strictly for Jest tests to mock client resolution
 declare global {
@@ -77,11 +77,11 @@ describe("UserService", () => {
       await createUser("wrongpass@example.com", "mySecretPass");
       await expect(
         loginUser("wrongpass@example.com", "wrong")
-      ).rejects.toThrow("Invalid password");
+      ).rejects.toThrow("Invalid email or password");
     });
 
     it("should throw error if user not found", async () => {
-      await expect(loginUser("notfound@example.com", "mySecretPass")).rejects.toThrow("User not found");
+      await expect(loginUser("notfound@example.com", "mySecretPass")).rejects.toThrow("Invalid email or password");
     });
   });
 
@@ -107,7 +107,7 @@ describe("UserService", () => {
     });
 
     it("should return empty array if no projects found", async () => {
-      const projects = await getUserProjects("nonexistent_id");
+      const projects = await getUserProjects(new ObjectId().toString());
       expect(projects).toHaveLength(0);
     });
   });
@@ -124,14 +124,6 @@ describe("ProjectService", () => {
         stage: "discovery",
         finalOutput: {
           brief: { content: "This is a flexible markdown brief." },
-          questions: {
-            questions: [
-              {
-                question: "What is your target audience?",
-                type: "textarea",
-              },
-            ],
-          },
         },
       };
 

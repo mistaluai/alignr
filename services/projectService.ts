@@ -50,6 +50,7 @@ export async function saveAgentStage(payload: SaveStagePayload): Promise<Project
 
   const formattedProject = {
     ...projectDoc,
+    userId: projectDoc.userId.toString(),
     _id: projectDoc._id.toString(),
   };
 
