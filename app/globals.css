@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
+/* ─── Design Tokens ─── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 224 10% 6%;        /* #0e1015 */
+  --background-secondary: 224 10% 9%;  /* #141620 */
+  --background-tertiary: 224 10% 12%;  /* #1a1d2a */
+  --foreground: 210 20% 93%;       /* #e8ecf2 */
+  --foreground-muted: 215 12% 55%; /* #7f8a9e */
+  --border: 220 10% 18%;           /* #282c38 */
+  --border-hover: 220 10% 28%;     /* #3e4352 */
+  --ring: 234 89% 67%;             /* #636df5 */
+  --accent: 234 89% 67%;           /* #636df5 */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 51%;        /* #dc2626 */
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 76% 45%;          /* #16a34a */
+
+  /* Stage colors */
+  --stage-discovery: 234 89% 67%;       /* indigo */
+  --stage-architecture: 38 92% 50%;     /* amber */
+  --stage-prototyping: 160 84% 40%;     /* emerald */
+  --stage-evaluation: 346 77% 50%;      /* rose */
+  --stage-complete: 142 76% 45%;        /* green */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-bg: hsl(var(--background));
+  --color-bg-secondary: hsl(var(--background-secondary));
+  --color-bg-tertiary: hsl(var(--background-tertiary));
+  --color-fg: hsl(var(--foreground));
+  --color-fg-muted: hsl(var(--foreground-muted));
+  --color-border: hsl(var(--border));
+  --color-border-hover: hsl(var(--border-hover));
+  --color-ring: hsl(var(--ring));
+  --color-accent: hsl(var(--accent));
+  --color-accent-fg: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-fg: hsl(var(--destructive-foreground));
+  --color-success: hsl(var(--success));
+
+  --color-stage-discovery: hsl(var(--stage-discovery));
+  --color-stage-architecture: hsl(var(--stage-architecture));
+  --color-stage-prototyping: hsl(var(--stage-prototyping));
+  --color-stage-evaluation: hsl(var(--stage-evaluation));
+  --color-stage-complete: hsl(var(--stage-complete));
+
+  --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base Styles ─── */
+html {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: hsl(var(--accent) / 0.3);
+  color: hsl(var(--foreground));
+}
+
+/* ─── Focus Ring ─── */
+*:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--border-hover));
+}
+
+/* ─── Utility Animations ─── */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px hsl(var(--accent) / 0.4); }
+  50% { box-shadow: 0 0 20px hsl(var(--accent) / 0.7); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
 }

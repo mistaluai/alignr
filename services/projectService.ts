@@ -3,7 +3,7 @@ import clientPromise from "../lib/db/mongodb";
 import { saveStagePayloadSchema, SaveStagePayload } from "../lib/schemas/stages/save-stage";
 import { Project, projectSchema } from "../lib/schemas/project";
 
-const DB_NAME = "alignr";
+const DB_NAME = process.env.DB_NAME || "alignr_data";
 
 export async function saveAgentStage(payload: SaveStagePayload): Promise<Project> {
   // Validate incoming payload

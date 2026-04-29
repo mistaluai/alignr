@@ -5,7 +5,7 @@ import { Project, projectSchema } from "../lib/schemas/project";
 
 import bcrypt from "bcrypt";
 
-const DB_NAME = "alignr";
+const DB_NAME = process.env.DB_NAME || "alignr_data";
 
 export async function createUser(email: string, passwordPlain: string): Promise<User> {
   const client = await clientPromise;
