@@ -2,27 +2,31 @@
 ## Architecture & System Documentation
 
 ### 1. Executive Summary
-Alignr is an interactive, multi-agent system designed to streamline the software product development lifecycle. It guides a user from a raw idea through business analysis, software planning, UI prototyping, and project evaluation. To ensure high performance, real-time interactivity, and seamless deployment on serverless infrastructure, the system utilizes a frontend-orchestrated, stateless HTTP architecture.
+Alignr is an interactive, multi-agent system designed to streamline the software product development lifecycle. It guides a user from a raw idea through business analysis, software planning, UI prototyping, and project evaluation.
 
 ### 2. Core Infrastructure & Technology Stack
-The architecture prioritizes real-time user feedback and strict data structuring, bypassing the limitations of traditional long-running server processes.
 
-* **Framework:** Next.js (App Router) serves as the unified environment for both the client-facing UI and the agent-driven API routes.
+* **Framework:** Next.js (App Router) serves as the unified environment for both the client-facing UI and the API routes.
 * **AI Orchestration:** The Vercel AI SDK handles streaming responses, native tool calling, and Generative UI components.
 * **Data Validation:** Zod is used to define strict, centralized schemas that dictate the exact shape of the data passed between agents.
 * **Database (State Checkpointer):** A PostgreSQL database (e.g., Supabase) acts as the persistent memory for the application, storing chat histories and structured project contexts between discrete API calls.
 
 ---
 
-### 3. State Management & Data Flow
-Because serverless functions have strict execution timeouts, agents do not run continuously in the background. Instead, the React frontend acts as the **conductor**, triggering distinct API endpoints sequentially based on the project's current state. 
+### 3. Memory Architecture & State Management
 
-The global state is anchored by a centralized data schema stored in the database. This schema acts as the "shared brain" for all agents and includes:
-* **State Machine Metadata:** Tracks the current phase, iteration loops (`revisionCount`), turn limits (`turnCount` to manage API costs), and rejection feedback (`lastCritiqueFeedback`).
-* **Chat History:** The ongoing dialogue between the user and the interactive agents.
-* **Business Brief:** An unstructured, highly flexible markdown summary of the idea, target audience, and business goals generated during the discovery phase.
-* **Architecture Blueprint:** A strict, Zod-validated outline of the proposed tech stack, feature list, and system design.
-* **Execution Package:** The final, rigorously structured prompt payload intended for external coding agents.
+#### Local Memory (Per-Agent Ephemeral State)
+* **Concept:** While a phase is active, all back-and-forth interactions live exclusively in the frontend React state.
+* **Isolation:** Each agent has its own isolated message list. When the user moves from the Business Analyst to the Software Planner, the local chat history does not carry over.
+
+#### Global Memory (The Shared Brain)
+* **Concept:** The global memory only stores the **finalized outputs** of each completed stage. These artifacts act as the context for subsequent agents.
+* **Database Strategy:** "Write-Once-Per-Stage." The database is not updated after every single message. A write occurs *only* when an agent finishes its job and the user approves the phase completion.
+
+**The Global Artifacts:**
+1.  **Business Brief:** An unstructured Markdown document.
+2.  **Architecture Blueprint:** A strictly typed Zod object.
+3.  **Execution Payload:** An ordered array of actionable prompts.
 
 ---
 
@@ -30,7 +34,7 @@ The global state is anchored by a centralized data schema stored in the database
 
 #### Phase 1: The Business Analyst (Discovery)
 * **Role:** Acts as a sounding board to flesh out the raw idea without stifling creativity through forced schemas.
-* **Mechanism:** Operates via a real-time chat interface. It analyzes the user's initial prompt and dynamically generates interview questions to uncover project requirements. To control costs, this phase includes a strict turn-count limit.
+* **Mechanism:** Operates via a real-time chat interface. It analyzes the user's initial prompt and dynamically generates interview questions to uncover project requirements. these questions are rendered in the ui as forms to be filled by the user.
 * **Output:** Utilizes a **User-Driven Gate**. When the agent believes it has enough context, it triggers a `suggestTransition` tool to output an unstructured markdown "Business Brief." The user acts as the ultimate gatekeeper, choosing to either approve the brief (advancing the state) or continue chatting to refine it. 
 
 #### Phase 2: The Software Planner (Architectural Design)
