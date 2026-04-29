@@ -3,6 +3,7 @@ import { google } from '@ai-sdk/google';
 import { z } from 'zod';
 import { ObjectId } from 'mongodb';
 import clientPromise from '@/lib/db/mongodb';
+import { interviewQuestionsSchema } from '@/lib/schemas/stages/business-analyst';
 
 const DB_NAME = process.env.DB_NAME || 'alignr_data';
 
@@ -23,9 +24,7 @@ Conduct a thorough discovery interview with the user to produce a comprehensive,
 - Each question should be specific, not generic. Tailor them based on what the user has already shared.
 - Use \`textarea\` type for questions expecting long-form answers. Use \`text\` for short factual answers.
 - Keep your conversational text brief and focused. The tools do the heavy lifting.
-- Do NOT call \`finalizeBrief\` until the user has explicitly approved the brief via \`presentBrief\`.
-
-Project ID Context: ${projectId}`;
+- Do NOT call \`finalizeBrief\` until the user has explicitly approved the brief via \`presentBrief\`.`;
 
   const result = streamText({
     model: google('gemini-2.5-flash'),
@@ -35,13 +34,7 @@ Project ID Context: ${projectId}`;
       // Client-side tool: renders multiple interview question forms in the UI
       askInterviewQuestions: {
         description: 'Ask the user a batch of interview questions to gather context about the project. Call this with an array of questions. Each question renders as an interactive form in the UI.',
-        inputSchema: z.object({
-          questions: z.array(z.object({
-            id: z.string().describe('A unique short identifier for this question, e.g. "q1_problem", "q2_users"'),
-            question: z.string().describe('The interview question to ask.'),
-            type: z.enum(['text', 'textarea']).describe('Input type. Use textarea for detailed answers, text for short factual ones.'),
-          })).describe('Array of interview questions to present to the user.'),
-        }),
+        inputSchema: interviewQuestionsSchema,
       },
 
       // Client-side tool: presents the compiled brief for user approval/rejection

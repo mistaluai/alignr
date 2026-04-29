@@ -8,14 +8,13 @@ import { CompleteStage } from "@/components/stages/CompleteStage";
 interface InteractionEngineProps {
   project: Project;
   currentStage: ProjectStage;
-  onStageComplete?: () => void;
-  isGuest?: boolean;
-  onGuestBriefUpdate?: (content: string) => void;
+  onBriefUpdate?: (brief: string) => void;
 }
 
 export function InteractionEngine({
   project,
   currentStage,
+  onBriefUpdate,
 }: InteractionEngineProps) {
   if (currentStage === "complete") {
     return <CompleteStage />;
@@ -28,6 +27,7 @@ export function InteractionEngine({
         key={`${project._id}-${currentStage}`}
         projectId={project._id}
         currentStage={currentStage}
+        onBriefUpdate={onBriefUpdate}
       />
     </div>
   );

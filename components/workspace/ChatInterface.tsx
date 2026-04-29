@@ -13,9 +13,10 @@ import type { ProjectStage } from "@/lib/schemas/chat";
 interface ChatInterfaceProps {
   projectId: string;
   currentStage: ProjectStage;
+  onBriefUpdate?: (brief: string) => void;
 }
 
-export function ChatInterface({ projectId, currentStage }: ChatInterfaceProps) {
+export function ChatInterface({ projectId, currentStage, onBriefUpdate }: ChatInterfaceProps) {
   const { messages, sendMessage, addToolOutput, status, error, stop } =
     useChat({
       transport: new DefaultChatTransport({
@@ -36,6 +37,29 @@ export function ChatInterface({ projectId, currentStage }: ChatInterfaceProps) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Sync the latest brief from presentBrief tool calls to the shared brain
+  useEffect(() => {
+    if (!onBriefUpdate) return;
+    // Walk messages in reverse to find the latest presentBrief with input
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role !== "assistant") continue;
+      for (let j = msg.parts.length - 1; j >= 0; j--) {
+        const part = msg.parts[j];
+        if (
+          part.type === "tool-presentBrief" &&
+          (part.state === "input-available" || part.state === "output-available")
+        ) {
+          const input = part.input as { briefContent: string } | undefined;
+          if (input?.briefContent) {
+            onBriefUpdate(input.briefContent);
+            return;
+          }
+        }
+      }
+    }
+  }, [messages, onBriefUpdate]);
 
   const stageName = currentStage
     .replace(/_/g, " ")

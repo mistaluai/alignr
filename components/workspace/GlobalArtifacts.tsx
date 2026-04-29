@@ -14,6 +14,7 @@ import { useState } from "react";
 
 interface GlobalArtifactsProps {
   project: Project;
+  liveBrief?: string | null;
 }
 
 interface ArtifactSectionProps {
@@ -70,8 +71,10 @@ function ArtifactSection({
   );
 }
 
-export function GlobalArtifacts({ project }: GlobalArtifactsProps) {
-  const hasBrief = !!project.businessBrief?.content;
+export function GlobalArtifacts({ project, liveBrief }: GlobalArtifactsProps) {
+  // Prioritize live brief from the chat over the static project brief
+  const briefContent = liveBrief || project.businessBrief?.content;
+  const hasBrief = !!briefContent;
   const hasArchitecture = !!project.architectureBlueprint;
   const hasExecution = !!project.executionPackage;
 
@@ -95,7 +98,7 @@ export function GlobalArtifacts({ project }: GlobalArtifactsProps) {
           defaultOpen
         >
           <div className="rounded-lg border border-border bg-bg p-3 text-xs text-fg-muted leading-relaxed font-mono whitespace-pre-wrap max-h-60 overflow-y-auto">
-            {project.businessBrief?.content}
+            {briefContent}
           </div>
         </ArtifactSection>
 

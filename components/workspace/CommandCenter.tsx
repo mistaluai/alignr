@@ -23,6 +23,9 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
   );
   const [guestProject, setGuestProject] = useState<Project>(initialProject);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [liveBrief, setLiveBrief] = useState<string | null>(
+    initialProject.businessBrief?.content || null
+  );
   const router = useRouter();
 
   // Use local guest state or the server-provided project
@@ -115,15 +118,13 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
           <InteractionEngine
             project={project}
             currentStage={currentStage}
-            onStageComplete={handleStageComplete}
-            isGuest={isGuest}
-            onGuestBriefUpdate={handleGuestBriefUpdate}
+            onBriefUpdate={setLiveBrief}
           />
         </main>
 
         {/* Right Pane — Global Artifacts */}
         <aside className="w-72 shrink-0 overflow-hidden bg-bg-secondary/30">
-          <GlobalArtifacts project={project} />
+          <GlobalArtifacts project={project} liveBrief={liveBrief} />
         </aside>
       </div>
     </div>
