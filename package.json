@@ -9,7 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.65",
+    "@ai-sdk/react": "^3.0.172",
     "@hookform/resolvers": "^5.2.2",
+    "ai": "^6.0.170",
     "bcrypt": "^6.0.0",
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
