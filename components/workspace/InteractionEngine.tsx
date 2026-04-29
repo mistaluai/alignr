@@ -9,12 +9,14 @@ interface InteractionEngineProps {
   project: Project;
   currentStage: ProjectStage;
   onBriefUpdate?: (brief: string) => void;
+  onStageAdvance?: (nextStage: ProjectStage) => void;
 }
 
 export function InteractionEngine({
   project,
   currentStage,
   onBriefUpdate,
+  onStageAdvance,
 }: InteractionEngineProps) {
   if (currentStage === "complete") {
     return <CompleteStage />;
@@ -28,6 +30,7 @@ export function InteractionEngine({
         projectId={project._id}
         currentStage={currentStage}
         onBriefUpdate={onBriefUpdate}
+        onStageAdvance={onStageAdvance}
       />
     </div>
   );

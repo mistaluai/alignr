@@ -14,9 +14,10 @@ interface ChatInterfaceProps {
   projectId: string;
   currentStage: ProjectStage;
   onBriefUpdate?: (brief: string) => void;
+  onStageAdvance?: (nextStage: ProjectStage) => void;
 }
 
-export function ChatInterface({ projectId, currentStage, onBriefUpdate }: ChatInterfaceProps) {
+export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageAdvance }: ChatInterfaceProps) {
   const { messages, sendMessage, addToolOutput, status, error, stop } =
     useChat({
       transport: new DefaultChatTransport({
@@ -60,6 +61,39 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate }: ChatIn
       }
     }
   }, [messages, onBriefUpdate]);
+
+  // Handle stage transition when finalizeBrief is successful
+  const transitionHandledRef = useRef<Record<string, boolean>>({});
+  
+  useEffect(() => {
+    if (!onStageAdvance) return;
+    
+    // Walk messages in reverse to find the latest completed finalizeBrief
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role !== "assistant") continue;
+      
+      for (let j = msg.parts.length - 1; j >= 0; j--) {
+        const part = msg.parts[j];
+        
+        if (part.type === "tool-finalizeBrief" && part.state === "output-available") {
+          const callId = part.toolCallId;
+          const output = part.output as { success: boolean; nextStage?: ProjectStage } | undefined;
+          
+          if (output?.success && output.nextStage && !transitionHandledRef.current[callId]) {
+            // Mark this specific tool call as handled
+            transitionHandledRef.current[callId] = true;
+            
+            // Wait a few seconds for the user to read the success message, then transition
+            setTimeout(() => {
+              onStageAdvance(output.nextStage!);
+            }, 3000);
+            return;
+          }
+        }
+      }
+    }
+  }, [messages, onStageAdvance]);
 
   const stageName = currentStage
     .replace(/_/g, " ")

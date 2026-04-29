@@ -38,7 +38,17 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
     }));
   };
 
-  const handleStageComplete = () => {
+  const handleStageComplete = (explicitNextStage?: ProjectStage) => {
+    if (explicitNextStage) {
+      setCurrentStage(explicitNextStage);
+      if (isGuest) {
+        setGuestProject((prev) => ({ ...prev, currentStage: explicitNextStage }));
+      } else {
+        router.refresh();
+      }
+      return;
+    }
+
     const stageOrder: ProjectStage[] = [
       "discovery",
       "architectural_design",
@@ -119,6 +129,7 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
             project={project}
             currentStage={currentStage}
             onBriefUpdate={setLiveBrief}
+            onStageAdvance={handleStageComplete}
           />
         </main>
 
