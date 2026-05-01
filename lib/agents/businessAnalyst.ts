@@ -1,11 +1,9 @@
 import { streamText, convertToModelMessages, UIMessage } from 'ai';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
-import { ObjectId } from 'mongodb';
-import clientPromise from '@/lib/db/mongodb';
+import { saveAgentStage } from '@/services/projectService';
 import { interviewQuestionsSchema } from '@/lib/schemas/stages/business-analyst';
 
-const DB_NAME = process.env.DB_NAME || 'alignr_data';
 
 export async function businessAnalyst(messages: UIMessage[], projectId: string) {
   const systemPrompt = `You are the Business Analyst agent for Alignr — a multi-agent product development system.
@@ -53,22 +51,14 @@ Conduct a thorough discovery interview with the user to produce a comprehensive,
           briefContent: z.string().describe('The final approved business brief in Markdown format.'),
         }),
         execute: async ({ briefContent }: { briefContent: string }) => {
-          const client = await clientPromise;
-          const db = client.db(DB_NAME);
-
-          const result = await db.collection('projects').updateOne(
-            { _id: new ObjectId(projectId) },
-            {
-              $set: {
-                businessBrief: { content: briefContent },
-                currentStage: 'architectural_design',
-                updatedAt: new Date(),
-              },
-            }
-          );
-
-          if (result.matchedCount === 0) {
-            return { success: false, error: 'Project not found.' };
+          try {
+            await saveAgentStage({
+              projectId,
+              stage: 'discovery',
+              finalOutput: { brief: { content: briefContent } },
+            });
+          } catch (error) {
+            return { success: false, error: 'Project not found or update failed.' };
           }
 
           return {

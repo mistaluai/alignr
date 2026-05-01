@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
 import { UIMessage } from 'ai';
-import { ObjectId } from 'mongodb';
-import clientPromise from '@/lib/db/mongodb';
+import { getProjectById } from '@/services/projectService';
 import { businessAnalyst } from '@/lib/agents/businessAnalyst';
 import { softwarePlanner } from '@/lib/agents/softwarePlanner';
 import { uiCoder } from '@/lib/agents/uiCoder';
 import { critiqueParser } from '@/lib/agents/critiqueParser';
 
-const DB_NAME = process.env.DB_NAME || 'alignr_data';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -21,10 +19,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
-    // Read the project's currentStage from MongoDB
-    const client = await clientPromise;
-    const db = client.db(DB_NAME);
-    const project = await db.collection('projects').findOne({ _id: new ObjectId(projectId) });
+    const project = await getProjectById(projectId);
 
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });

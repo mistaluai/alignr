@@ -1,17 +1,13 @@
 import { streamText, convertToModelMessages, UIMessage } from 'ai';
 import { google } from '@ai-sdk/google';
 import { z } from 'zod';
-import { ObjectId } from 'mongodb';
-import clientPromise from '@/lib/db/mongodb';
+import { getProjectById, saveAgentStage } from '@/services/projectService';
 import { architecturePlanSchema } from '@/lib/schemas/stages/software-planner';
 
-const DB_NAME = process.env.DB_NAME || 'alignr_data';
 
 export async function softwarePlanner(messages: UIMessage[], projectId: string) {
   // 1. Fetch the project and the finalized business brief
-  const client = await clientPromise;
-  const db = client.db(DB_NAME);
-  const project = await db.collection('projects').findOne({ _id: new ObjectId(projectId) });
+  const project = await getProjectById(projectId);
 
   if (!project || !project.businessBrief) {
     throw new Error("Project or business brief not found. Cannot start planning.");
@@ -29,7 +25,7 @@ ${briefContent}
 """
 
 ## Your Process & Rules
-1. **FIRST MESSAGE**: Immediately analyze the Business Brief above. Generate an initial architecture plan consisting of Features, associated Requirements, Frontend Screens, and a Tech Stack. For each Frontend Screen, you MUST list at least 3-5 specific UI components (e.g., "Feature Grid", "Search Bar", "User Profile Dropdown") in the \`components\` array. Call the \`presentArchitecture\` tool to output this structured data to the user interface. 
+1. **FIRST MESSAGE**: Immediately analyze the Business Brief above. Generate an initial architecture plan consisting of Features, associated Requirements, Frontend Screens, and a Tech Stack. For each Frontend Screen, you MUST list at least 3-5 specific UI components (e.g., "Feature Grid", "Search Bar", "User Profile Dropdown") in the \`components\` array. Call the \`presentArchitecture\` tool to output this structured data to the user interface.
 2. **REFINEMENT**: The user will review the architecture in the UI. They will use a structured form to request modifications. These requests will come in the format: \`[MOD: TYPE - ENTITY] Comment\`.
 3. **PARSING COMMENTS**: When you receive a modification request:
     - **TYPE**: Can be FEATURE, REQUIREMENT, or SCREEN.
@@ -39,7 +35,11 @@ ${briefContent}
 4. **VISUALIZATION**: The user has the option to click "Visualize" on any frontend screen in the UI. When they do, they will send a message indicating which screen they want to see. You must respond by calling the \`triggerUIVisualizer\` tool, passing the screen details to generate a mock UI.
 5. **APPROVAL**: Once the user is satisfied, they will explicitly approve the architecture. When they do, call the \`finalizeArchitecture\` tool to save the plan to the database and advance the project.
 
-Do not output standard markdown lists for the architecture. ALWAYS use the \`presentArchitecture\` tool so the Alignr UI can render it interactively. Keep your conversational responses very brief, letting the UI components do the heavy lifting.`;
+## CRITICAL RULES
+- ALWAYS use the \`presentArchitecture\` tool to present or update the plan. NEVER output the architecture as markdown text.
+- After calling \`presentArchitecture\`, DO NOT produce any additional conversational text. The UI handles all rendering. Just call the tool and stop.
+- After receiving a modification request, silently update the plan and call \`presentArchitecture\` again. No commentary needed.
+- Only produce conversational text when responding to a question that is NOT a modification request.`;
 
   // 3. Execute streamText with Vercel AI SDK
   const result = streamText({
@@ -47,13 +47,16 @@ Do not output standard markdown lists for the architecture. ALWAYS use the \`pre
     messages: await convertToModelMessages(messages),
     system: systemPrompt,
     tools: {
-      // Tool 1: Present the Architecture Plan
+      // Tool 1: Present the Architecture Plan (server-side, auto-resolves)
       presentArchitecture: {
         description: 'Present or update the software architecture plan in the UI. Call this initially, and whenever the user requests modifications to features or screens.',
         inputSchema: z.object({
           plan: architecturePlanSchema,
           summaryOfChanges: z.string().optional().describe("A brief sentence explaining what changed in this version, or 'Initial Draft' if it's the first time."),
         }),
+        execute: async ({ plan, summaryOfChanges }: { plan: any; summaryOfChanges?: string }) => {
+          return { displayed: true, summaryOfChanges: summaryOfChanges || 'Plan presented' };
+        },
       },
 
       // Tool 2: Trigger the UI Visualizer
@@ -97,19 +100,14 @@ export default function ${screenName.replace(/\s+/g, '')}() {
           finalPlan: architecturePlanSchema,
         }),
         execute: async ({ finalPlan }: { finalPlan: any }) => {
-          const updateResult = await db.collection('projects').updateOne(
-            { _id: new ObjectId(projectId) },
-            {
-              $set: {
-                architectureBlueprint: finalPlan,
-                currentStage: 'visual_prototyping',
-                updatedAt: new Date(),
-              },
-            }
-          );
-
-          if (updateResult.matchedCount === 0) {
-            return { success: false, error: 'Project not found.' };
+          try {
+            await saveAgentStage({
+              projectId,
+              stage: 'architectural_design',
+              finalOutput: finalPlan,
+            });
+          } catch (error) {
+            return { success: false, error: 'Project not found or update failed.' };
           }
 
           return {

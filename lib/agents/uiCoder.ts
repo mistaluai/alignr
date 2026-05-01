@@ -8,7 +8,7 @@ export async function uiCoder(messages: UIMessage[], projectId: string) {
   Project ID Context: ${projectId}`;
 
   const result = streamText({
-    model: google('gemini-2.0-flash-lite'),
+    model: google('gemini-2.5-flash'),
     messages: await convertToModelMessages(messages),
     system: systemPrompt,
     // No tool implementations or complex schemas yet

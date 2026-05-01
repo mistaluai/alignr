@@ -5,6 +5,22 @@ import { Project, projectSchema } from "../lib/schemas/project";
 
 const DB_NAME = process.env.DB_NAME || "alignr_data";
 
+export async function getProjectById(projectId: string): Promise<Project | null> {
+  const client = await clientPromise;
+  const db = client.db(DB_NAME);
+  const projectDoc = await db.collection("projects").findOne({ _id: new ObjectId(projectId) });
+  
+  if (!projectDoc) return null;
+
+  const formattedProject = {
+    ...projectDoc,
+    userId: projectDoc.userId.toString(),
+    _id: projectDoc._id.toString(),
+  };
+
+  return projectSchema.parse(formattedProject);
+}
+
 export async function saveAgentStage(payload: SaveStagePayload): Promise<Project> {
   // Validate incoming payload
   const validatedPayload = saveStagePayloadSchema.parse(payload);
@@ -21,15 +37,19 @@ export async function saveAgentStage(payload: SaveStagePayload): Promise<Project
   switch (stage) {
     case "discovery":
       updateData.businessBrief = finalOutput.brief;
+      updateData.currentStage = "architectural_design";
       break;
     case "architectural_design":
       updateData.architectureBlueprint = finalOutput;
+      updateData.currentStage = "visual_prototyping";
       break;
     case "visual_prototyping":
       updateData.uiPrototypes = finalOutput;
+      updateData.currentStage = "evaluation";
       break;
     case "evaluation":
       updateData.executionPackage = finalOutput;
+      updateData.currentStage = "complete";
       break;
     case "complete":
       // Add custom finalization logic if needed
