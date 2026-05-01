@@ -52,7 +52,7 @@ Do not output standard markdown lists for the architecture. ALWAYS use the \`pre
         description: 'Present or update the software architecture plan in the UI. Call this initially, and whenever the user requests modifications to features or screens.',
         inputSchema: z.object({
           plan: architecturePlanSchema,
-          summaryOfChanges: z.string().describe("A brief sentence explaining what changed in this version, or 'Initial Draft' if it's the first time."),
+          summaryOfChanges: z.string().optional().describe("A brief sentence explaining what changed in this version, or 'Initial Draft' if it's the first time."),
         }),
       },
 
