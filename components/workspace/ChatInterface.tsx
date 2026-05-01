@@ -3,7 +3,6 @@
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
-  lastAssistantMessageIsCompleteWithToolCalls,
 } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -259,7 +258,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
         },
       }),
       id: `${projectId}-${currentStage}`,
-      sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     });
 
   const [input, setInput] = useState("");
