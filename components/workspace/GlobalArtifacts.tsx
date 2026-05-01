@@ -163,20 +163,20 @@ export function GlobalArtifacts({ project, liveBrief }: GlobalArtifactsProps) {
         >
           {project.executionPackage && (
             <div className="space-y-1.5">
-              {project.executionPackage.executionSteps.map((step) => (
+              {project.executionPackage.sequentialPrompts.map((prompt: string, index: number) => (
                 <div
-                  key={step.order}
+                  key={index}
                   className="flex items-start gap-2 rounded-md border border-border bg-bg p-2"
                 >
                   <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 text-[10px] font-bold text-accent">
-                    {step.order}
+                    {index + 1}
                   </span>
                   <div className="min-w-0">
                     <p className="text-xs font-medium text-fg">
-                      {step.title}
+                      Step {index + 1}
                     </p>
                     <p className="mt-0.5 text-[11px] text-fg-muted line-clamp-2">
-                      {step.prompt}
+                      {prompt}
                     </p>
                   </div>
                 </div>

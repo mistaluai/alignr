@@ -4,6 +4,7 @@ import type { Project } from "@/lib/schemas/project";
 import type { ProjectStage } from "@/lib/schemas/chat";
 import { ChatInterface } from "@/components/workspace/ChatInterface";
 import { CompleteStage } from "@/components/stages/CompleteStage";
+import { ExecutionPackageStage } from "@/components/stages/ExecutionPackageStage";
 
 interface InteractionEngineProps {
   project: Project;
@@ -20,6 +21,16 @@ export function InteractionEngine({
 }: InteractionEngineProps) {
   if (currentStage === "complete") {
     return <CompleteStage />;
+  }
+
+  if (currentStage === "execution_package") {
+    return (
+      <ExecutionPackageStage
+        projectId={project._id}
+        project={project}
+        onStageAdvance={onStageAdvance}
+      />
+    );
   }
 
   return (

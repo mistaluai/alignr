@@ -52,8 +52,7 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
     const stageOrder: ProjectStage[] = [
       "discovery",
       "architectural_design",
-      "visual_prototyping",
-      "evaluation",
+      "execution_package",
       "complete",
     ];
     const currentIndex = stageOrder.indexOf(currentStage);

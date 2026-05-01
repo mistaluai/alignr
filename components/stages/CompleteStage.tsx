@@ -30,11 +30,10 @@ export function CompleteStage() {
             emoji: "🏗️",
             stage: "Planning",
           },
-          { label: "UI Prototypes", emoji: "🎨", stage: "Prototyping" },
           {
             label: "Execution Package",
             emoji: "📦",
-            stage: "Evaluation",
+            stage: "Execution",
           },
         ].map((item) => (
           <Card key={item.label}>

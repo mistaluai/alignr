@@ -6,9 +6,7 @@ const stageColorMap: Record<ProjectStage, string> = {
   discovery: "bg-stage-discovery/15 text-stage-discovery border-stage-discovery/30",
   architectural_design:
     "bg-stage-architecture/15 text-stage-architecture border-stage-architecture/30",
-  visual_prototyping:
-    "bg-stage-prototyping/15 text-stage-prototyping border-stage-prototyping/30",
-  evaluation:
+  execution_package:
     "bg-stage-evaluation/15 text-stage-evaluation border-stage-evaluation/30",
   complete:
     "bg-stage-complete/15 text-stage-complete border-stage-complete/30",
@@ -17,8 +15,7 @@ const stageColorMap: Record<ProjectStage, string> = {
 const stageLabelMap: Record<ProjectStage, string> = {
   discovery: "Discovery",
   architectural_design: "Architecture",
-  visual_prototyping: "Prototyping",
-  evaluation: "Evaluation",
+  execution_package: "Execution Package",
   complete: "Complete",
 };
 

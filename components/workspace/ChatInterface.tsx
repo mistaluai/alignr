@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Send, Bot, User, Loader2, CheckCircle2, FileText, Layers, Eye, Check, Sparkles, Database, MessageCircle, RefreshCw } from "lucide-react";
 import type { ProjectStage } from "@/lib/schemas/chat";
 import type { ArchitecturePlan, FrontendScreen } from "@/lib/schemas/stages/software-planner";
-import type { UiPrototype } from "@/lib/schemas/stages/ui-coder";
 
 interface ChatInterfaceProps {
   projectId: string;
@@ -507,6 +506,7 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
                                   toolCallId: callId,
                                   output: { answers },
                                 });
+                                sendMessage({ text: "I have provided answers to the questions. Please proceed." });
                               }}
                               className="space-y-4"
                             >
@@ -597,25 +597,27 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() =>
+                                onClick={() => {
                                   addToolOutput({
                                     tool: "presentBrief",
                                     toolCallId: callId,
                                     output: { approved: false, feedback: "I'd like to refine some areas." },
-                                  })
-                                }
+                                  });
+                                  sendMessage({ text: "I'd like to refine some areas of the brief." });
+                                }}
                               >
                                 Refine Further
                               </Button>
                               <Button
                                 size="sm"
-                                onClick={() =>
+                                onClick={() => {
                                   addToolOutput({
                                     tool: "presentBrief",
                                     toolCallId: callId,
                                     output: { approved: true },
-                                  })
-                                }
+                                  });
+                                  sendMessage({ text: "I approve this brief. Please finalize it." });
+                                }}
                               >
                                 <CheckCircle2 className="h-4 w-4 mr-1" />
                                 Approve Brief
@@ -814,7 +816,7 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
                   case "tool-triggerUIVisualizer": {
                     const callId = part.toolCallId;
                     const toolInput = part.input as { screenName: string; associatedFeature: string } | undefined;
-                    const toolOutput = part.output as UiPrototype | undefined;
+                    const toolOutput = part.output as { screenName: string; associatedFeature: string; mockCode: string; status: string } | undefined;
 
                     switch (part.state) {
                       case "input-streaming":

@@ -3,8 +3,7 @@ import { ObjectId } from "mongodb";
 import { projectStageSchema } from "../chat";
 import { businessBriefSchema } from "./business-analyst";
 import { architecturePlanSchema } from "./software-planner";
-import { uiPrototypeSchema } from "./ui-coder";
-import { executionPackageSchema } from "./critique";
+import { executionPackageSchema } from "./execution-package";
 
 const objectIdSchema = z.string().refine((val) => ObjectId.isValid(val), {
   message: "Invalid MongoDB ObjectId",
@@ -25,12 +24,7 @@ export const saveStagePayloadSchema = z.discriminatedUnion("stage", [
   }),
   z.object({
     projectId: objectIdSchema,
-    stage: z.literal("visual_prototyping"),
-    finalOutput: uiPrototypeSchema,
-  }),
-  z.object({
-    projectId: objectIdSchema,
-    stage: z.literal("evaluation"),
+    stage: z.literal("execution_package"),
     finalOutput: executionPackageSchema,
   }),
   z.object({

@@ -41,13 +41,9 @@ export async function saveAgentStage(payload: SaveStagePayload): Promise<Project
       break;
     case "architectural_design":
       updateData.architectureBlueprint = finalOutput;
-      updateData.currentStage = "visual_prototyping";
+      updateData.currentStage = "execution_package";
       break;
-    case "visual_prototyping":
-      updateData.uiPrototypes = finalOutput;
-      updateData.currentStage = "evaluation";
-      break;
-    case "evaluation":
+    case "execution_package":
       updateData.executionPackage = finalOutput;
       updateData.currentStage = "complete";
       break;

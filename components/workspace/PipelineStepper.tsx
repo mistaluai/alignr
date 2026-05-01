@@ -18,16 +18,14 @@ const stages: {
 }[] = [
   { key: "discovery", label: "Discovery", icon: Search },
   { key: "architectural_design", label: "Architecture", icon: Blocks },
-  { key: "visual_prototyping", label: "Prototyping", icon: Monitor },
-  { key: "evaluation", label: "Evaluation", icon: ShieldCheck },
+  { key: "execution_package", label: "Execution Package", icon: Monitor },
   { key: "complete", label: "Complete", icon: CheckCircle2 },
 ];
 
 const stageOrder: ProjectStage[] = [
   "discovery",
   "architectural_design",
-  "visual_prototyping",
-  "evaluation",
+  "execution_package",
   "complete",
 ];
 

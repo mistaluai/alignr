@@ -112,8 +112,8 @@ export default function ${screenName.replace(/\s+/g, '')}() {
 
           return {
             success: true,
-            message: 'Architecture plan finalized. Moving to Visual Prototyping stage.',
-            nextStage: 'visual_prototyping',
+            message: 'Architecture plan finalized. Moving to Execution Package stage.',
+            nextStage: 'execution_package',
           };
         },
       },

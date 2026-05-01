@@ -3,8 +3,7 @@ import { UIMessage } from 'ai';
 import { getProjectById } from '@/services/projectService';
 import { businessAnalyst } from '@/lib/agents/businessAnalyst';
 import { softwarePlanner } from '@/lib/agents/softwarePlanner';
-import { uiCoder } from '@/lib/agents/uiCoder';
-import { critiqueParser } from '@/lib/agents/critiqueParser';
+import { executionPlanner } from '@/lib/agents/executionPlanner';
 
 
 // Allow streaming responses up to 30 seconds
@@ -31,16 +30,13 @@ export async function POST(req: Request) {
     switch (currentStage) {
       case 'discovery':
         return await businessAnalyst(messages, projectId);
-        
+
       case 'architectural_design':
         return await softwarePlanner(messages, projectId);
-        
-      case 'visual_prototyping':
-        return await uiCoder(messages, projectId);
-        
-      case 'evaluation':
-        return await critiqueParser(messages, projectId);
-        
+
+      case 'execution_package':
+        return await executionPlanner(messages, projectId);
+
       default:
         return NextResponse.json({ error: 'Invalid or unknown project stage' }, { status: 400 });
     }
