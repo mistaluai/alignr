@@ -4,13 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Blocks, Monitor, Cpu, Database, Layout } from "lucide-react";
 import type { Project } from "@/lib/schemas/project";
+import type { ArchitecturePlan } from "@/lib/schemas/stages/software-planner";
 
 interface ArchitectureStageProps {
   project: Project;
 }
 
 export function ArchitectureStage({ project }: ArchitectureStageProps) {
-  const blueprint = project.architectureBlueprint;
+  const blueprint = project.architectureBlueprint as ArchitecturePlan | undefined;
 
   if (!blueprint) {
     return (

@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/schemas/project";
+import type { ArchitecturePlan } from "@/lib/schemas/stages/software-planner";
 import {
   FileText,
   Blocks,
@@ -116,7 +117,7 @@ export function GlobalArtifacts({ project, liveBrief }: GlobalArtifactsProps) {
                   Tech Stack
                 </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {project.architectureBlueprint.techStack.map((tech) => (
+                  {(project.architectureBlueprint as ArchitecturePlan).techStack.map((tech) => (
                     <span
                       key={tech}
                       className="inline-flex items-center rounded-md bg-stage-architecture/10 px-2 py-0.5 text-[11px] font-medium text-stage-architecture border border-stage-architecture/20"

@@ -7,8 +7,10 @@ export const frontendScreenSchema = z.object({
 });
 
 export const architecturePlanSchema = z.object({
-  techStack: z.array(z.string()).describe("A list of technologies to be used in the project"),
+  requirements: z.array(z.string()).describe("A list of requirements for the project"),
+  features: z.array(z.string()).describe("A list of features for the project"),
   frontendScreens: z.array(frontendScreenSchema).describe("A list of frontend screens to be built"),
+  techStack: z.array(z.string()).describe("A list of technologies to be used in the project"),
 });
 
 export type FrontendScreen = z.infer<typeof frontendScreenSchema>;
