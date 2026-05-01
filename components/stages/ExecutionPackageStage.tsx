@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,15 +45,20 @@ export function ExecutionPackageStage({ projectId, project, onStageAdvance }: Ex
           }
         }
         if (part.type === "tool-finalizeExecutionPackage" && part.state === "output-available") {
-          onStageAdvance?.("complete");
+          setTimeout(() => {
+            onStageAdvance?.("complete");
+          }, 1500);
         }
       }
     }
   }, [messages, onStageAdvance]);
 
+  const hasTriggeredRef = useRef(false);
+
   // Automatically trigger agent if no package exists
   useEffect(() => {
-    if (!executionPackage && !isLoading && messages.length === 0) {
+    if (!executionPackage && !isLoading && messages.length === 0 && !hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
       sendMessage({ text: "Please generate the execution package." });
     }
   }, [executionPackage, isLoading, messages.length, sendMessage]);
