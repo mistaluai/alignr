@@ -4,8 +4,7 @@ export const messageRoleSchema = z.enum(["user", "assistant", "system", "tool"])
 export const projectStageSchema = z.enum([
   "discovery",
   "architectural_design",
-  "visual_prototyping",
-  "evaluation",
+  "execution_package",
   "complete",
 ]);
 

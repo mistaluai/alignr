@@ -3,7 +3,23 @@ import clientPromise from "../lib/db/mongodb";
 import { saveStagePayloadSchema, SaveStagePayload } from "../lib/schemas/stages/save-stage";
 import { Project, projectSchema } from "../lib/schemas/project";
 
-const DB_NAME = "alignr";
+const DB_NAME = process.env.DB_NAME || "alignr_data";
+
+export async function getProjectById(projectId: string): Promise<Project | null> {
+  const client = await clientPromise;
+  const db = client.db(DB_NAME);
+  const projectDoc = await db.collection("projects").findOne({ _id: new ObjectId(projectId) });
+  
+  if (!projectDoc) return null;
+
+  const formattedProject = {
+    ...projectDoc,
+    userId: projectDoc.userId.toString(),
+    _id: projectDoc._id.toString(),
+  };
+
+  return projectSchema.parse(formattedProject);
+}
 
 export async function saveAgentStage(payload: SaveStagePayload): Promise<Project> {
   // Validate incoming payload
@@ -21,15 +37,15 @@ export async function saveAgentStage(payload: SaveStagePayload): Promise<Project
   switch (stage) {
     case "discovery":
       updateData.businessBrief = finalOutput.brief;
+      updateData.currentStage = "architectural_design";
       break;
     case "architectural_design":
       updateData.architectureBlueprint = finalOutput;
+      updateData.currentStage = "execution_package";
       break;
-    case "visual_prototyping":
-      updateData.uiPrototypes = finalOutput;
-      break;
-    case "evaluation":
+    case "execution_package":
       updateData.executionPackage = finalOutput;
+      updateData.currentStage = "complete";
       break;
     case "complete":
       // Add custom finalization logic if needed
