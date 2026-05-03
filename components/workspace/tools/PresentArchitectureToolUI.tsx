@@ -95,7 +95,7 @@ export function PresentArchitectureToolUI({
                         <div className="text-sm font-medium text-fg">{screen.name}</div>
                         <div className="text-[10px] text-fg-muted leading-relaxed">{screen.description}</div>
                       </div>
-                      
+
                       {screen.components && screen.components.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                           {screen.components.map((comp, ci) => (
@@ -124,12 +124,12 @@ export function PresentArchitectureToolUI({
           <div className="pt-4 border-t border-border space-y-3">
             <label className="text-xs font-medium text-fg">Request Modifications</label>
             {toolInput?.plan && (
-              <ModificationForm 
-                plan={toolInput.plan} 
-                onSendMessage={sendMessage} 
+              <ModificationForm
+                plan={toolInput.plan}
+                onSendMessage={sendMessage}
               />
             )}
-            
+
             <div className="flex justify-center pt-2">
               <Button
                 variant="outline"

@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { ArchitecturePlan } from "@/lib/schemas/stages/software-planner";
 
-export function ModificationForm({ 
-  plan, 
-  onSendMessage 
-}: { 
-  plan: ArchitecturePlan; 
-  onSendMessage: (msg: { text: string }) => void 
+export function ModificationForm({
+  plan,
+  onSendMessage
+}: {
+  plan: ArchitecturePlan;
+  onSendMessage: (msg: { text: string }) => void
 }) {
   const [modType, setModType] = useState<"feature" | "requirement" | "screen" | "other">("other");
   const [selectedEntity, setSelectedEntity] = useState("");

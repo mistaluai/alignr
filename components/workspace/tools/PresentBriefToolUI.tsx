@@ -72,11 +72,10 @@ export function PresentBriefToolUI({
       );
     case "output-available":
       return (
-        <div key={callId} className={`mt-2 p-4 rounded-lg border space-y-2 ${
-          toolOutput?.approved
+        <div key={callId} className={`mt-2 p-4 rounded-lg border space-y-2 ${toolOutput?.approved
             ? "bg-green-500/5 border-green-500/30"
             : "bg-stage-architecture/5 border-stage-architecture/30"
-        }`}>
+          }`}>
           <div className="flex items-center gap-2 text-sm font-medium text-fg">
             {toolOutput?.approved ? (
               <>

@@ -78,7 +78,7 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i];
       if (msg.role !== "assistant") continue;
-      
+
       for (let j = msg.parts.length - 1; j >= 0; j--) {
         const part = msg.parts[j];
         const isFinalizeBrief = part.type === "tool-finalizeBrief";
@@ -87,7 +87,7 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
         if ((isFinalizeBrief || isFinalizeArch) && part.state === "output-available") {
           const callId = part.toolCallId;
           const output = part.output as { success: boolean; nextStage?: ProjectStage } | undefined;
-          
+
           if (output?.success && output.nextStage && !transitionHandledRef.current[callId]) {
             transitionHandledRef.current[callId] = true;
             return output.nextStage;
@@ -128,7 +128,7 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
       }, 50);
       return () => clearTimeout(timer);
     }
-    
+
     // Reset ref if we leave the stage or if messages are cleared/changed
     if (currentStage !== "architectural_design") {
       autoTriggeredRef.current = null;
@@ -151,7 +151,7 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
         )
       );
   }, [messages, currentStage]);
-  
+
   const showChatInput = !hasStartedInterview && currentStage !== "architectural_design";
 
   // Extract latest architecture plan
@@ -239,56 +239,55 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
           isProcessing={status === 'submitted' || status === 'streaming'}
         />
       ) : (
-      /* Messages */
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6">
-        {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-fg-muted space-y-4">
-            <div className="h-12 w-12 rounded-full bg-bg-secondary border border-border flex items-center justify-center">
-              <Bot className="h-6 w-6 text-accent/50" />
-            </div>
-            <p className="text-sm">
-              Start chatting with the {stageName} agent…
-            </p>
-          </div>
-        )}
-
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
-          >
-            {message.role === "assistant" && (
-              <div className="h-8 w-8 rounded-md bg-accent/10 flex items-center justify-center shrink-0 mt-1">
-                <Bot className="h-4 w-4 text-accent" />
+        /* Messages */
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6">
+          {messages.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center text-fg-muted space-y-4">
+              <div className="h-12 w-12 rounded-full bg-bg-secondary border border-border flex items-center justify-center">
+                <Bot className="h-6 w-6 text-accent/50" />
               </div>
-            )}
+              <p className="text-sm">
+                Start chatting with the {stageName} agent…
+              </p>
+            </div>
+          )}
 
+          {messages.map((message) => (
             <div
-              className={`max-w-[80%] rounded-xl px-4 py-3 text-sm flex flex-col gap-2 ${
-                message.role === "user"
-                  ? "bg-accent text-accent-fg rounded-br-none"
-                  : "bg-bg-secondary border border-border text-fg rounded-bl-none"
-              }`}
+              key={message.id}
+              className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              {message.parts.map((part, index) => (
-                <ChatMessage 
-                  key={index} 
-                  part={part} 
-                  addToolOutput={addToolOutput} 
-                  sendMessage={sendMessage} 
-                  isFirstPart={index === 0}
-                />
-              ))}
-            </div>
+              {message.role === "assistant" && (
+                <div className="h-8 w-8 rounded-md bg-accent/10 flex items-center justify-center shrink-0 mt-1">
+                  <Bot className="h-4 w-4 text-accent" />
+                </div>
+              )}
 
-            {message.role === "user" && (
-              <div className="h-8 w-8 rounded-md bg-bg-secondary border border-border flex items-center justify-center shrink-0 mt-1">
-                <User className="h-4 w-4 text-fg-muted" />
+              <div
+                className={`max-w-[80%] rounded-xl px-4 py-3 text-sm flex flex-col gap-2 ${message.role === "user"
+                    ? "bg-accent text-accent-fg rounded-br-none"
+                    : "bg-bg-secondary border border-border text-fg rounded-bl-none"
+                  }`}
+              >
+                {message.parts.map((part, index) => (
+                  <ChatMessage
+                    key={index}
+                    part={part}
+                    addToolOutput={addToolOutput}
+                    sendMessage={sendMessage}
+                    isFirstPart={index === 0}
+                  />
+                ))}
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+
+              {message.role === "user" && (
+                <div className="h-8 w-8 rounded-md bg-bg-secondary border border-border flex items-center justify-center shrink-0 mt-1">
+                  <User className="h-4 w-4 text-fg-muted" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Error display */}
