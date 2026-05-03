@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ShieldAlert, UserPlus, X } from "lucide-react";
+import { ArrowLeft, ShieldAlert, UserPlus, X, BrainCircuit } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/schemas/project";
 import type { ProjectStage } from "@/lib/schemas/chat";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,7 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
   );
   const [guestProject, setGuestProject] = useState<Project>(initialProject);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [isBrainOpen, setIsBrainOpen] = useState(true);
   const [liveBrief, setLiveBrief] = useState<string | null>(
     initialProject.businessBrief?.content || null
   );
@@ -117,13 +119,25 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
           {project.title}
         </h1>
         <Badge stage={currentStage} />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsBrainOpen(!isBrainOpen)}
+          className={cn(
+            "h-8 w-8 transition-colors",
+            isBrainOpen ? "text-accent bg-accent/10 hover:bg-accent/20" : "text-fg-muted hover:text-fg hover:bg-bg-tertiary"
+          )}
+          title={isBrainOpen ? "Hide Shared Brain" : "Show Shared Brain"}
+        >
+          <BrainCircuit className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Dual-pane layout */}
       <div className="flex flex-1 overflow-hidden">
 
         {/* Center Pane — Interaction Engine */}
-        <main className="flex-1 flex flex-col overflow-hidden border-r border-border">
+        <main className="flex-1 flex flex-col overflow-hidden">
           <InteractionEngine
             project={project}
             currentStage={currentStage}
@@ -133,8 +147,15 @@ export function CommandCenter({ project: initialProject, isGuest = false }: Comm
         </main>
 
         {/* Right Pane — Global Artifacts */}
-        <aside className="w-72 shrink-0 overflow-hidden bg-bg-secondary/30">
-          <GlobalArtifacts project={project} liveBrief={liveBrief} />
+        <aside
+          className={cn(
+            "shrink-0 overflow-hidden bg-bg-secondary/30 transition-all duration-300 ease-in-out border-l border-border flex flex-col",
+            isBrainOpen ? "w-80 opacity-100" : "w-0 opacity-0 border-l-0"
+          )}
+        >
+          <div className="w-80 flex-1 h-full flex flex-col overflow-hidden">
+            <GlobalArtifacts project={project} liveBrief={liveBrief} />
+          </div>
         </aside>
       </div>
     </div>
