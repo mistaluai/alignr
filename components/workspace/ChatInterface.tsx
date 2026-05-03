@@ -18,16 +18,24 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageAdvance }: ChatInterfaceProps) {
-  const { messages, sendMessage, addToolOutput, status, error, stop } =
-    useChat({
-      transport: new DefaultChatTransport({
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
         api: "/api/chat",
         body: {
           projectId,
         },
       }),
+    [projectId]
+  );
+
+  const { messages, sendMessage, addToolOutput, status, error, stop } =
+    useChat({
+      transport,
       id: `${projectId}-${currentStage}`,
     });
+
+  const autoTriggeredRef = useRef<string | null>(null);
 
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -100,6 +108,33 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     }
   }, [stageAdvanceTrigger, onStageAdvance]);
 
+  // Auto-trigger architecture plan generation when entering the architecture stage
+  useEffect(() => {
+    if (
+      currentStage === "architectural_design" &&
+      messages.length === 0 &&
+      status === "ready" &&
+      autoTriggeredRef.current !== currentStage
+    ) {
+      // Small timeout to ensure useChat is fully initialized and to prevent race conditions
+      const timer = setTimeout(() => {
+        // Double check status still ready before sending
+        if (status === "ready") {
+          autoTriggeredRef.current = currentStage;
+          sendMessage({
+            text: "Please generate the software architecture plan based on the business brief.",
+          });
+        }
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+    
+    // Reset ref if we leave the stage or if messages are cleared/changed
+    if (currentStage !== "architectural_design") {
+      autoTriggeredRef.current = null;
+    }
+  }, [currentStage, messages.length, status, sendMessage]);
+
   const stageName = currentStage
     .replace(/_/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
@@ -117,7 +152,7 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
       );
   }, [messages, currentStage]);
   
-  const showChatInput = !hasStartedInterview;
+  const showChatInput = !hasStartedInterview && currentStage !== "architectural_design";
 
   // Extract latest architecture plan
   const latestArchitecturePlan = useMemo(() => {
