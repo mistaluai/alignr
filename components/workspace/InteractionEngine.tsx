@@ -20,7 +20,7 @@ export function InteractionEngine({
   onStageAdvance,
 }: InteractionEngineProps) {
   if (currentStage === "complete") {
-    return <CompleteStage />;
+    return <CompleteStage project={project} />;
   }
 
   if (currentStage === "execution_package") {
