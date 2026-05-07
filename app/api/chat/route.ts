@@ -12,7 +12,12 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { messages, projectId }: { messages: UIMessage[]; projectId: string } = body;
+    const { messages, projectId, apiKey, model }: { 
+      messages: UIMessage[]; 
+      projectId: string; 
+      apiKey?: string; 
+      model?: string 
+    } = body;
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
@@ -29,13 +34,13 @@ export async function POST(req: Request) {
     // Route the payload to the corresponding isolated agent function
     switch (currentStage) {
       case 'discovery':
-        return await businessAnalyst(messages, projectId);
+        return await businessAnalyst(messages, projectId, apiKey, model);
 
       case 'architectural_design':
-        return await softwarePlanner(messages, projectId);
+        return await softwarePlanner(messages, projectId, apiKey, model);
 
       case 'execution_package':
-        return await executionPlanner(messages, projectId);
+        return await executionPlanner(messages, projectId, apiKey, model);
 
       default:
         return NextResponse.json({ error: 'Invalid or unknown project stage' }, { status: 400 });

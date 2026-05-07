@@ -1,11 +1,20 @@
 import { streamText, convertToModelMessages, UIMessage } from 'ai';
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { saveAgentStage } from '@/services/projectService';
 import { interviewQuestionsSchema } from '@/lib/schemas/stages/business-analyst';
 
 
-export async function businessAnalyst(messages: UIMessage[], projectId: string) {
+export async function businessAnalyst(
+  messages: UIMessage[], 
+  projectId: string,
+  apiKey?: string,
+  modelId?: string
+) {
+  const google = createGoogleGenerativeAI({
+    apiKey: apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  });
+
   const systemPrompt = `You are the Business Analyst agent for Alignr — a multi-agent product development system.
 
 ## Your Goal
@@ -25,7 +34,7 @@ Conduct a thorough discovery interview with the user to produce a comprehensive,
 - Do NOT call \`finalizeBrief\` until the user has explicitly approved the brief via \`presentBrief\`.`;
 
   const result = streamText({
-    model: google('gemini-2.5-flash'),
+    model: google(modelId || 'gemini-1.5-flash'),
     messages: await convertToModelMessages(messages),
     system: systemPrompt,
     tools: {
@@ -73,4 +82,3 @@ Conduct a thorough discovery interview with the user to produce a comprehensive,
 
   return result.toUIMessageStreamResponse();
 }
-

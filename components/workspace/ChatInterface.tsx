@@ -9,6 +9,8 @@ import type { ProjectStage } from "@/lib/schemas/chat";
 import type { ArchitecturePlan } from "@/lib/schemas/stages/software-planner";
 import { ArchitecturePlanReview } from "./tools/ArchitecturePlanReview";
 import { ChatMessage } from "./ChatMessage";
+import { useGeminiSettings } from "@/hooks/useGeminiSettings";
+import { GeminiSettingsDialog } from "./GeminiSettingsDialog";
 
 interface ChatInterfaceProps {
   projectId: string;
@@ -18,15 +20,19 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageAdvance }: ChatInterfaceProps) {
+  const { apiKey, model } = useGeminiSettings();
+
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: "/api/chat",
         body: {
           projectId,
+          apiKey,
+          model,
         },
       }),
-    [projectId]
+    [projectId, apiKey, model]
   );
 
   const { messages, sendMessage, addToolOutput, status, error, stop } =
@@ -224,6 +230,8 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
               Stop
             </button>
           )}
+          <div className="w-px h-4 bg-border mx-1" />
+          <GeminiSettingsDialog />
         </div>
       </div>
 
