@@ -9,7 +9,7 @@ export async function getProjectById(projectId: string): Promise<Project | null>
   const client = await clientPromise;
   const db = client.db(DB_NAME);
   const projectDoc = await db.collection("projects").findOne({ _id: new ObjectId(projectId) });
-  
+
   if (!projectDoc) return null;
 
   const formattedProject = {
@@ -21,7 +21,49 @@ export async function getProjectById(projectId: string): Promise<Project | null>
   return projectSchema.parse(formattedProject);
 }
 
-export async function saveAgentStage(payload: SaveStagePayload): Promise<Project> {
+export async function deleteProject(projectId: string): Promise<boolean> {
+  const client = await clientPromise;
+  const db = client.db(DB_NAME);
+
+  const result = await db.collection("projects").deleteOne({ _id: new ObjectId(projectId) });
+
+  return result.deletedCount === 1;
+}
+
+export async function renameProject(projectId: string, newTitle: string): Promise<Project> {
+  const client = await clientPromise;
+  const db = client.db(DB_NAME);
+
+  const result = await db.collection("projects").updateOne(
+    { _id: new ObjectId(projectId) },
+    {
+      $set: {
+        title: newTitle,
+        updatedAt: new Date()
+      }
+    }
+  );
+
+  if (result.matchedCount === 0) {
+    throw new Error("Project not found");
+  }
+
+  const projectDoc = await db.collection("projects").findOne({ _id: new ObjectId(projectId) });
+  if (!projectDoc) throw new Error("Failed to retrieve updated project");
+
+  const formattedProject = {
+    ...projectDoc,
+    userId: projectDoc.userId.toString(),
+    _id: projectDoc._id.toString(),
+  };
+
+  return projectSchema.parse(formattedProject);
+}
+
+export async function saveAgentStage(
+  payload: SaveStagePayload,
+  isDraft: boolean = false
+): Promise<Project> {
   // Validate incoming payload
   const validatedPayload = saveStagePayloadSchema.parse(payload);
   const { projectId, stage, finalOutput } = validatedPayload;
@@ -37,15 +79,21 @@ export async function saveAgentStage(payload: SaveStagePayload): Promise<Project
   switch (stage) {
     case "discovery":
       updateData.businessBrief = finalOutput.brief;
-      updateData.currentStage = "architectural_design";
+      if (!isDraft) {
+        updateData.currentStage = "architectural_design";
+      }
       break;
     case "architectural_design":
       updateData.architectureBlueprint = finalOutput;
-      updateData.currentStage = "execution_package";
+      if (!isDraft) {
+        updateData.currentStage = "execution_package";
+      }
       break;
     case "execution_package":
       updateData.executionPackage = finalOutput;
-      updateData.currentStage = "complete";
+      if (!isDraft) {
+        updateData.currentStage = "complete";
+      }
       break;
     case "complete":
       // Add custom finalization logic if needed
