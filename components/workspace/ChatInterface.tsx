@@ -20,24 +20,22 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageAdvance }: ChatInterfaceProps) {
-  const { apiKey, model } = useGeminiSettings();
+  const { apiKey, model, isLoaded } = useGeminiSettings();
 
-  const transport = useMemo(
-    () =>
-      new DefaultChatTransport({
-        api: "/api/chat",
-        body: {
-          projectId,
-          apiKey,
-          model,
-        },
-      }),
-    [projectId, apiKey, model]
-  );
+  const transport = useMemo(() => {
+    return new DefaultChatTransport({
+      api: "/api/chat",
+      body: {
+        projectId,
+        apiKey,
+        model,
+      },
+    });
+  }, [projectId, apiKey, model, isLoaded]);
 
   const { messages, sendMessage, addToolOutput, status, error, stop } =
     useChat({
-      transport,
+      transport: transport ?? undefined,
       id: `${projectId}-${currentStage}`,
     });
 
@@ -49,10 +47,8 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     if (!error) return null;
 
     const msg = error.message;
-
     let isShared = msg.includes('rate_limit_exceeded_shared');
     let isBYOK = msg.includes('rate_limit_exceeded_byok');
-
     const isGenericQuota = msg.includes('429') || msg.toLowerCase().includes('quota');
 
     if (isGenericQuota && !isShared && !isBYOK) {
@@ -159,24 +155,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     }
   }, [currentStage, messages.length, status, sendMessage]);
 
-  const stageName = currentStage
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (l) => l.toUpperCase());
-
-  const hasStartedInterview = useMemo(() => {
-    return (currentStage === "discovery" || currentStage === "architectural_design") &&
-      messages.some((m) =>
-        m.role === "assistant" &&
-        m.parts?.some((p) =>
-          p.type === "tool-askInterviewQuestions" ||
-          p.type === "tool-presentBrief" ||
-          p.type === "tool-presentArchitecture"
-        )
-      );
-  }, [messages, currentStage]);
-
-  const showChatInput = !hasStartedInterview && currentStage !== "architectural_design";
-
   const latestArchitecturePlan = useMemo(() => {
     if (currentStage !== 'architectural_design') return null;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -213,6 +191,30 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     return count;
   }, [messages, currentStage]);
 
+  if (!isLoaded || !transport) {
+    return (
+      <div className="flex h-full items-center justify-center text-fg-muted text-sm">
+        Loading settings…
+      </div>
+    );
+  }
+
+  // Derived state for rendering
+  const stageName = currentStage
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (l) => l.toUpperCase());
+
+  const hasStartedInterview = (currentStage === "discovery" || currentStage === "architectural_design") &&
+    messages.some((m) =>
+      m.role === "assistant" &&
+      m.parts?.some((p) =>
+        p.type === "tool-askInterviewQuestions" ||
+        p.type === "tool-presentBrief" ||
+        p.type === "tool-presentArchitecture"
+      )
+    );
+
+  const showChatInput = !hasStartedInterview && currentStage !== "architectural_design";
   const showPlanReview = currentStage === 'architectural_design' && latestArchitecturePlan !== null;
 
   return (

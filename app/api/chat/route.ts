@@ -15,9 +15,14 @@ function isQuotaError(error: any): boolean {
   return (
     error?.status === 429 ||
     error?.response?.status === 429 ||
+    error?.status === 503 ||
+    error?.response?.status === 503 ||
+    error?.status === 403 ||
+    error?.response?.status === 403 ||
     msg.includes('quota') ||
     errorString.includes('resource_exhausted') ||
-    errorString.includes('rate_limit')
+    errorString.includes('rate_limit') ||
+    errorString.includes('PERMISSION_DENIED')
   );
 }
 
@@ -27,11 +32,13 @@ export async function POST(req: Request) {
     const { messages, projectId, apiKey, model } = body;
 
     if (!projectId) {
+      console.log("Project ID is required");
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
     const project = await getProjectById(projectId);
     if (!project) {
+      console.log("Project not found");
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
@@ -51,6 +58,7 @@ export async function POST(req: Request) {
           result = await executionPlanner(messages, projectId, apiKey, model);
           break;
         default:
+          console.log("Invalid stage");
           return NextResponse.json({ error: 'Invalid stage' }, { status: 400 });
       }
 

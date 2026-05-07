@@ -10,8 +10,11 @@ export async function executionPlanner(
   apiKey?: string,
   modelId?: string
 ) {
-  const google = createGoogleGenerativeAI({
-    apiKey: apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  let key = apiKey ? apiKey : process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  // console.log("[Agent] API KEY: ", key);
+  // console.log("MODEL ID: ", modelId);
+  const googleProvider = createGoogleGenerativeAI({
+    apiKey: key
   });
 
   const project = await getProjectById(projectId);
@@ -77,7 +80,7 @@ ${architecture}
 - After calling \`finalizeExecutionPackage\`, DO NOT produce any additional conversational text. The UI handles all rendering. Just call the tool and stop.`;
 
   const result = streamText({
-    model: google(modelId || 'gemini-1.5-flash'),
+    model: googleProvider(modelId || 'gemini-2.5-flash'),
     messages: await convertToModelMessages(messages),
     system: systemPrompt,
     tools: {

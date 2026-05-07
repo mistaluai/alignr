@@ -11,10 +11,12 @@ export async function softwarePlanner(
   apiKey?: string,
   modelId?: string
 ) {
-  const google = createGoogleGenerativeAI({
-    apiKey: apiKey || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+  let key = apiKey ? apiKey : process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  // console.log("[Agent] API KEY: ", key);
+  // console.log("MODEL ID: ", modelId);
+  const googleProvider = createGoogleGenerativeAI({
+    apiKey: key
   });
-
   // 1. Fetch the project and the finalized business brief
   const project = await getProjectById(projectId);
 
@@ -52,7 +54,7 @@ ${briefContent}
 
   // 3. Execute streamText with Vercel AI SDK
   const result = streamText({
-    model: google(modelId || 'gemini-1.5-flash'), // Using a fast model for responsive tool calling
+    model: googleProvider(modelId || 'gemini-2.5-flash'), // Using a fast model for responsive tool calling
     messages: await convertToModelMessages(messages),
     system: systemPrompt,
     tools: {
