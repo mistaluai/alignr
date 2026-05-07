@@ -15,7 +15,7 @@ export async function executionPlanner(messages: UIMessage[], projectId: string)
   const architecture = JSON.stringify(project.architectureBlueprint, null, 2);
 
   const systemPrompt = `
-  # Role: Expert Technical Architect & Prompt Engineer
+# Role: Expert Technical Architect & Prompt Engineer
 You are an expert Technical Architect and AI Prompt Engineer. Your primary function is to analyze high-level project documentation (Business Briefs, Product Requirement Documents, Architecture Plans) and deconstruct them into a sequential, highly detailed series of execution prompts. 
 
 These generated prompts will be fed directly to an autonomous AI coding agent (e.g., Claude Code, Cursor, Devin, or a custom AI agent). 
@@ -49,6 +49,7 @@ Every single prompt you generate for the coding agent MUST be lengthy, comprehen
 - NEVER generate code yourself. Your job is to write the *instructions* that tell another AI how to write the code.
 - Assume the coding agent has the memory of a goldfish. Provide all necessary schema structures, interface definitions, and styling variables within the prompt for that specific task.
 - Be highly opinionated. Dictate exact variable names, folder structures, component props, and error message text where applicable. Leave nothing to assumption.
+
 ## Project Context
 Business Brief:
 """
@@ -60,29 +61,19 @@ Architecture Blueprint:
 ${architecture}
 """
 
-## CRITICAL RULES
-- ALWAYS use the \`presentExecutionPackage\` tool to present or update the package. NEVER output the package as markdown text.
-- After calling \`presentExecutionPackage\`, DO NOT produce any additional conversational text. The UI handles all rendering. Just call the tool and stop.
-- Only produce conversational text when responding to a general question.`;
+## CRITICAL RULES (SINGLE-SHOT EXECUTION)
+- You operate in a strict, single-pass execution mode. 
+- Immediately formulate the sequential, step-by-step array of highly detailed coding prompts.
+- ALWAYS use the \`finalizeExecutionPackage\` tool to output your results and save the package to the database. NEVER output the package as markdown text.
+- After calling \`finalizeExecutionPackage\`, DO NOT produce any additional conversational text. The UI handles all rendering. Just call the tool and stop.`;
 
   const result = streamText({
     model: google('gemini-2.5-flash'),
     messages: await convertToModelMessages(messages),
     system: systemPrompt,
     tools: {
-      presentExecutionPackage: {
-        description: 'Present or update the execution package in the UI. Call this initially to generate the package, or whenever the user requests modifications.',
-        inputSchema: z.object({
-          package: executionPackageSchema,
-          summaryOfChanges: z.string().optional().describe("A brief sentence explaining what changed, or 'Initial Draft' if it's the first time."),
-        }),
-        execute: async ({ package: execPackage, summaryOfChanges }: { package: any; summaryOfChanges?: string }) => {
-          return { displayed: true, summaryOfChanges: summaryOfChanges || 'Execution package presented' };
-        },
-      },
-
       finalizeExecutionPackage: {
-        description: 'Save the finalized execution package to the database and advance the project to the complete stage. Only call this AFTER the user has approved the package.',
+        description: 'Save the generated execution package to the database and advance the project to the complete stage. Call this immediately after generating the prompts.',
         inputSchema: z.object({
           finalPackage: executionPackageSchema,
         }),
