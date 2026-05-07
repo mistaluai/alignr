@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,6 +12,7 @@ import type { ProjectStage } from "@/lib/schemas/chat";
 import type { ExecutionPackage } from "@/lib/schemas/stages/execution-package";
 import { MarkdownViewer } from "../ui/markdown-viewer";
 import { StructuredDataViewer } from "../ui/structured-data-viewer";
+import { useGeminiSettings } from "@/hooks/useGeminiSettings";
 
 interface ExecutionPackageStageProps {
   projectId: string;
@@ -20,6 +21,8 @@ interface ExecutionPackageStageProps {
 }
 
 export function ExecutionPackageStage({ projectId, project, onStageAdvance }: ExecutionPackageStageProps) {
+  const { apiKey, model, isLoaded } = useGeminiSettings();
+
   const [executionPackage, setExecutionPackage] = useState<ExecutionPackage | null>(project.executionPackage || null);
   const [copiedSection, setCopiedSection] = useState<string | null>(null);
 
@@ -29,11 +32,20 @@ export function ExecutionPackageStage({ projectId, project, onStageAdvance }: Ex
   const [showPrompts, setShowPrompts] = useState(true); // Keep prompts open by default
   const [showRequirements, setShowRequirements] = useState(false);
 
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
+  // Use memoized transport to pass projectId, apiKey, and model correctly
+  const transport = useMemo(() => {
+    return new DefaultChatTransport({
       api: "/api/chat",
-      body: { projectId },
-    }),
+      body: {
+        projectId,
+        apiKey,
+        model
+      },
+    });
+  }, [projectId, apiKey, model]);
+
+  const { messages, sendMessage, status } = useChat({
+    transport,
     id: `${projectId}-execution_package`,
   });
 
@@ -103,6 +115,14 @@ export function ExecutionPackageStage({ projectId, project, onStageAdvance }: Ex
   const handleGenerate = () => {
     sendMessage({ text: "Please generate the execution package based on the project overview." });
   };
+
+  if (!isLoaded) {
+    return (
+      <div className="flex h-full items-center justify-center text-fg-muted text-sm">
+        Loading settings…
+      </div>
+    );
+  }
 
   // 1. Loading State View
   if (isLoading && !executionPackage) {
