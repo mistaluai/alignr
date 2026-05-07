@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, AlertCircle } from "lucide-react";
 import type { ProjectStage } from "@/lib/schemas/chat";
 import type { ArchitecturePlan } from "@/lib/schemas/stages/software-planner";
 import { ArchitecturePlanReview } from "./tools/ArchitecturePlanReview";
@@ -42,9 +42,34 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     });
 
   const autoTriggeredRef = useRef<string | null>(null);
-
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const errorInfo = useMemo(() => {
+    if (!error) return null;
+
+    const msg = error.message;
+
+    let isShared = msg.includes('rate_limit_exceeded_shared');
+    let isBYOK = msg.includes('rate_limit_exceeded_byok');
+
+    const isGenericQuota = msg.includes('429') || msg.toLowerCase().includes('quota');
+
+    if (isGenericQuota && !isShared && !isBYOK) {
+      if (apiKey && apiKey.trim() !== "") {
+        isBYOK = true;
+      } else {
+        isShared = true;
+      }
+    }
+
+    return {
+      isRateLimit: isShared || isBYOK || isGenericQuota,
+      isSharedLimit: isShared,
+      isBYOKLimit: isBYOK,
+      message: msg
+    };
+  }, [error, apiKey]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -52,7 +77,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     }
   }, [messages]);
 
-  // Sync the latest brief using useMemo instead of a loop inside useEffect
   const latestBriefContent = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i--) {
       const msg = messages[i];
@@ -77,7 +101,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     }
   }, [latestBriefContent, onBriefUpdate]);
 
-  // Sync stage transition via useMemo instead of a loop in useEffect
   const transitionHandledRef = useRef<Record<string, boolean>>({});
 
   const stageAdvanceTrigger = useMemo(() => {
@@ -106,7 +129,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
 
   useEffect(() => {
     if (onStageAdvance && stageAdvanceTrigger) {
-      // Wait a few seconds for the user to read the success message, then transition
       const timer = setTimeout(() => {
         onStageAdvance(stageAdvanceTrigger);
       }, 3000);
@@ -114,7 +136,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     }
   }, [stageAdvanceTrigger, onStageAdvance]);
 
-  // Auto-trigger architecture plan generation when entering the architecture stage
   useEffect(() => {
     if (
       currentStage === "architectural_design" &&
@@ -122,9 +143,7 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
       status === "ready" &&
       autoTriggeredRef.current !== currentStage
     ) {
-      // Small timeout to ensure useChat is fully initialized and to prevent race conditions
       const timer = setTimeout(() => {
-        // Double check status still ready before sending
         if (status === "ready") {
           autoTriggeredRef.current = currentStage;
           sendMessage({
@@ -135,7 +154,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
       return () => clearTimeout(timer);
     }
 
-    // Reset ref if we leave the stage or if messages are cleared/changed
     if (currentStage !== "architectural_design") {
       autoTriggeredRef.current = null;
     }
@@ -145,7 +163,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     .replace(/_/g, " ")
     .replace(/\b\w/g, (l) => l.toUpperCase());
 
-  // Determine whether to hide the chat input.
   const hasStartedInterview = useMemo(() => {
     return (currentStage === "discovery" || currentStage === "architectural_design") &&
       messages.some((m) =>
@@ -160,7 +177,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
 
   const showChatInput = !hasStartedInterview && currentStage !== "architectural_design";
 
-  // Extract latest architecture plan
   const latestArchitecturePlan = useMemo(() => {
     if (currentStage !== 'architectural_design') return null;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -180,7 +196,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     return null;
   }, [messages, currentStage]);
 
-  // Count architecture plan versions
   const architectureVersion = useMemo(() => {
     if (currentStage !== 'architectural_design') return 0;
     let count = 0;
@@ -198,12 +213,10 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
     return count;
   }, [messages, currentStage]);
 
-  // Whether to show the dedicated plan review panel
   const showPlanReview = currentStage === 'architectural_design' && latestArchitecturePlan !== null;
 
   return (
     <div className="flex flex-col h-full bg-bg">
-      {/* Header */}
       <div className="border-b border-border px-6 py-3 flex justify-between items-center bg-bg-secondary/30">
         <h2 className="text-sm font-semibold text-fg flex items-center gap-2">
           <Bot className="h-4 w-4 text-accent" />
@@ -235,7 +248,6 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
         </div>
       </div>
 
-      {/* Architecture Plan Review (replaces chat when plan is available) */}
       {showPlanReview ? (
         <ArchitecturePlanReview
           plan={latestArchitecturePlan.plan}
@@ -247,16 +259,13 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
           isProcessing={status === 'submitted' || status === 'streaming'}
         />
       ) : (
-        /* Messages */
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-fg-muted space-y-4">
               <div className="h-12 w-12 rounded-full bg-bg-secondary border border-border flex items-center justify-center">
                 <Bot className="h-6 w-6 text-accent/50" />
               </div>
-              <p className="text-sm">
-                Start chatting with the {stageName} agent…
-              </p>
+              <p className="text-sm">Start chatting with the {stageName} agent…</p>
             </div>
           )}
 
@@ -273,8 +282,8 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
 
               <div
                 className={`max-w-[80%] rounded-xl px-4 py-3 text-sm flex flex-col gap-2 ${message.role === "user"
-                    ? "bg-accent text-accent-fg rounded-br-none"
-                    : "bg-bg-secondary border border-border text-fg rounded-bl-none"
+                  ? "bg-accent text-accent-fg rounded-br-none"
+                  : "bg-bg-secondary border border-border text-fg rounded-bl-none"
                   }`}
               >
                 {message.parts.map((part, index) => (
@@ -298,14 +307,36 @@ export function ChatInterface({ projectId, currentStage, onBriefUpdate, onStageA
         </div>
       )}
 
-      {/* Error display */}
-      {error && (
-        <div className="mx-6 mb-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2 text-xs text-destructive animate-fade-in">
-          Something went wrong. Please try again.
+      {errorInfo && (
+        <div className="mx-6 mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-xs text-destructive animate-fade-in flex gap-3 items-start">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <div className="flex flex-col gap-1">
+            <p className="font-semibold">
+              {errorInfo.isRateLimit ? errorInfo.isBYOKLimit ? 'API Rate Limit Reached' : 'Service Temporarily Unavailable' : 'Service Connection Error'}
+            </p>
+            <p className="opacity-90 leading-relaxed">
+              {errorInfo.isSharedLimit
+                ? 'Our servers are currently experiencing high demand. To continue without interruption, please add your own API key in the settings menu at the top right.'
+                : errorInfo.isBYOKLimit
+                  ? 'Your provided API key has exhausted its quota. Please check your billing/usage in Google AI Studio or provide a different key.'
+                  : 'We encountered an issue connecting to the AI agent. Please wait a moment and try sending your message again. If this persists, try refreshing the page.'}
+            </p>
+            {errorInfo.isRateLimit && (
+              <div className="mt-1 flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-[10px] border-destructive/20 bg-destructive/5 hover:bg-destructive/10 text-destructive"
+                  onClick={() => window.location.reload()}
+                >
+                  Retry Connection
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Input */}
       {showChatInput && (
         <div className="p-4 bg-bg border-t border-border">
           <form

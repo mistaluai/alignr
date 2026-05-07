@@ -5,48 +5,76 @@ import { businessAnalyst } from '@/lib/agents/businessAnalyst';
 import { softwarePlanner } from '@/lib/agents/softwarePlanner';
 import { executionPlanner } from '@/lib/agents/executionPlanner';
 
-
-// Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
+
+// Helper to detect Gemini-specific rate limits
+function isQuotaError(error: any): boolean {
+  const errorString = JSON.stringify(error).toLowerCase();
+  const msg = error?.message?.toLowerCase() || "";
+
+  return (
+    error?.status === 429 ||
+    error?.response?.status === 429 ||
+    msg.includes('quota') ||
+    errorString.includes('resource_exhausted') ||
+    errorString.includes('rate_limit')
+  );
+}
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { messages, projectId, apiKey, model }: { 
-      messages: UIMessage[]; 
-      projectId: string; 
-      apiKey?: string; 
-      model?: string 
-    } = body;
+    const { messages, projectId, apiKey, model } = body;
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
     }
 
     const project = await getProjectById(projectId);
-
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
 
-    const currentStage: string = project.currentStage;
+    const currentStage = project.currentStage;
 
-    // Route the payload to the corresponding isolated agent function
-    switch (currentStage) {
-      case 'discovery':
-        return await businessAnalyst(messages, projectId, apiKey, model);
+    try {
+      // Logic: Execute the agent and return its response (usually a stream)
+      let result;
+      switch (project.currentStage) {
+        case 'discovery':
+          result = await businessAnalyst(messages, projectId, apiKey, model);
+          break;
+        case 'architectural_design':
+          result = await softwarePlanner(messages, projectId, apiKey, model);
+          break;
+        case 'execution_package':
+          result = await executionPlanner(messages, projectId, apiKey, model);
+          break;
+        default:
+          return NextResponse.json({ error: 'Invalid stage' }, { status: 400 });
+      }
 
-      case 'architectural_design':
-        return await softwarePlanner(messages, projectId, apiKey, model);
+      return result.toUIMessageStreamResponse();
+    } catch (agentError: any) {
 
-      case 'execution_package':
-        return await executionPlanner(messages, projectId, apiKey, model);
+      if (isQuotaError(agentError)) {
+        const isBYOK = !!apiKey;
 
-      default:
-        return NextResponse.json({ error: 'Invalid or unknown project stage' }, { status: 400 });
+        return NextResponse.json({
+          error: isBYOK
+            ? 'Your Gemini API key has reached its limit.'
+            : 'The shared Gemini service is currently at capacity.',
+          code: isBYOK ? 'rate_limit_exceeded_byok' : 'rate_limit_exceeded_shared'
+        }, { status: 429 });
+      }
+
+      throw agentError; // Re-throw for the outer catch-all
     }
-  } catch (error) {
-    console.error('Chat endpoint error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Fatal Chat Error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error.message },
+      { status: 500 }
+    );
   }
 }

@@ -5,7 +5,7 @@ import { getProjectById, saveAgentStage } from '@/services/projectService';
 import { executionPackageSchema } from '@/lib/schemas/stages/execution-package';
 
 export async function executionPlanner(
-  messages: UIMessage[], 
+  messages: UIMessage[],
   projectId: string,
   apiKey?: string,
   modelId?: string
@@ -107,5 +107,5 @@ ${architecture}
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result;
 }

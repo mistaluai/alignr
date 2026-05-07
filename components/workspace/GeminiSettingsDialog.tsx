@@ -60,7 +60,7 @@ export function GeminiSettingsDialog() {
             Gemini Settings
           </CardTitle>
           <p className="text-sm text-fg-muted mt-1">
-            Configure your Gemini API key and model preferences. These are stored locally in your browser.
+            Configure your Gemini API key and model preferences. These are stored locally in your browser, they never touch our database.
           </p>
         </CardHeader>
 

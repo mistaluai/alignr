@@ -6,7 +6,7 @@ import { architecturePlanSchema } from '@/lib/schemas/stages/software-planner';
 
 
 export async function softwarePlanner(
-  messages: UIMessage[], 
+  messages: UIMessage[],
   projectId: string,
   apiKey?: string,
   modelId?: string
@@ -129,5 +129,5 @@ export default function ${screenName.replace(/\s+/g, '')}() {
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result;
 }

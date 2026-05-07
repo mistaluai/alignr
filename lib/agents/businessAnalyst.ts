@@ -6,7 +6,7 @@ import { interviewQuestionsSchema } from '@/lib/schemas/stages/business-analyst'
 
 
 export async function businessAnalyst(
-  messages: UIMessage[], 
+  messages: UIMessage[],
   projectId: string,
   apiKey?: string,
   modelId?: string
@@ -80,5 +80,5 @@ Conduct a thorough discovery interview with the user to produce a comprehensive,
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result;
 }
