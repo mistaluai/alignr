@@ -32,7 +32,7 @@ export function ArchitecturePlanReview({
   }, [isProcessing]);
 
   return (
-    <div 
+    <div
       ref={scrollRef}
       className={`relative flex-1 ${isProcessing ? 'overflow-hidden' : 'overflow-y-auto'}`}
     >
@@ -124,7 +124,7 @@ export function ArchitecturePlanReview({
                     </div>
                   )}
                 </div>
-                <Button
+                {/* <Button
                   size="sm"
                   variant="ghost"
                   className="h-8 px-2 text-accent hover:text-accent hover:bg-accent/10 shrink-0"
@@ -132,7 +132,7 @@ export function ArchitecturePlanReview({
                 >
                   <Eye className="h-3.5 w-3.5 mr-1.5" />
                   Visualize
-                </Button>
+                </Button> */}
               </div>
             ))}
           </div>
