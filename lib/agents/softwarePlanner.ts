@@ -1,11 +1,22 @@
 import { streamText, convertToModelMessages, UIMessage } from 'ai';
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { getProjectById, saveAgentStage } from '@/services/projectService';
 import { architecturePlanSchema } from '@/lib/schemas/stages/software-planner';
 
 
-export async function softwarePlanner(messages: UIMessage[], projectId: string) {
+export async function softwarePlanner(
+  messages: UIMessage[],
+  projectId: string,
+  apiKey?: string,
+  modelId?: string
+) {
+  let key = apiKey ? apiKey : process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  // console.log("[Agent] API KEY: ", key);
+  // console.log("MODEL ID: ", modelId);
+  const googleProvider = createGoogleGenerativeAI({
+    apiKey: key
+  });
   // 1. Fetch the project and the finalized business brief
   const project = await getProjectById(projectId);
 
@@ -43,7 +54,7 @@ ${briefContent}
 
   // 3. Execute streamText with Vercel AI SDK
   const result = streamText({
-    model: google('gemini-2.5-flash'), // Using a fast model for responsive tool calling
+    model: googleProvider(modelId || 'gemini-2.5-flash'), // Using a fast model for responsive tool calling
     messages: await convertToModelMessages(messages),
     system: systemPrompt,
     tools: {
@@ -120,5 +131,5 @@ export default function ${screenName.replace(/\s+/g, '')}() {
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result;
 }

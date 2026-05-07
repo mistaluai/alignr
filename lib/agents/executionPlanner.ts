@@ -1,10 +1,22 @@
 import { streamText, convertToModelMessages, UIMessage } from 'ai';
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { getProjectById, saveAgentStage } from '@/services/projectService';
 import { executionPackageSchema } from '@/lib/schemas/stages/execution-package';
 
-export async function executionPlanner(messages: UIMessage[], projectId: string) {
+export async function executionPlanner(
+  messages: UIMessage[],
+  projectId: string,
+  apiKey?: string,
+  modelId?: string
+) {
+  let key = apiKey ? apiKey : process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  // console.log("[Agent] API KEY: ", key);
+  // console.log("MODEL ID: ", modelId);
+  const googleProvider = createGoogleGenerativeAI({
+    apiKey: key
+  });
+
   const project = await getProjectById(projectId);
 
   if (!project || !project.businessBrief || !project.architectureBlueprint) {
@@ -68,7 +80,7 @@ ${architecture}
 - After calling \`finalizeExecutionPackage\`, DO NOT produce any additional conversational text. The UI handles all rendering. Just call the tool and stop.`;
 
   const result = streamText({
-    model: google('gemini-2.5-flash'),
+    model: googleProvider(modelId || 'gemini-2.5-flash'),
     messages: await convertToModelMessages(messages),
     system: systemPrompt,
     tools: {
@@ -98,5 +110,5 @@ ${architecture}
     },
   });
 
-  return result.toUIMessageStreamResponse();
+  return result;
 }
